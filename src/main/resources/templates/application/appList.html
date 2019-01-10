@@ -1,0 +1,164 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/layout">
+<head>
+    <title>应用程序列表</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div>
+        <a class="btn btn-primary radius" href="javascript:;" onclick="javascript:$('#searchDiv').toggle();"><i
+                class="Hui-iconfont">&#xe709;</i> SEARCH</a>
+        <a class="btn btn-primary radius" type="button" id="add"
+           onclick="openAddPage()"><i class="Hui-iconfont">&#xe604;</i>添加</a>
+        <a class="btn btn-primary radius" type="button" id="edit"><i class="Hui-iconfont">&#xe60c;</i>修改</a>
+        <a class="btn btn-danger radius" type="button" id="delete"><i class="Hui-iconfont">&#xe609;</i>删除</a>
+    </div>
+    <div id="searchDiv" style="margin:10px;display:none;">
+        <div class="formControls col-md-12">
+            <label class="form-label col-md-1">系统名称</label>
+            <div class="formControls col-md-4">
+                <input type="text" placeholder="系统名称" class="input-text radius size-M" name="appName"
+                       id="appName"/>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div id="divContent">
+        <table class="table table-border table-bordered table-bg table-hover table-sort">
+            <thead>
+            <tr>
+                <td>系统编码</td>
+                <td>系统名称</td>
+                <td>创建人</td>
+                <td>创建时间</td>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            <tr v-for="value in content">
+                <td>{{value.appCode}}</td>
+                <td>{{value.appName}}</td>
+                <td>{{value.creator}}</td>
+                <td>{{value.createTime}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="tablePage"></div>
+    <script>
+        var initData = {}
+
+        var vm = new Vue({
+                        el: '#divContent',
+                        data: initData
+                    });
+
+        // 打开添加页
+        function addApp(){
+            layer.open({
+              type: 2,
+              title: '添加系统',
+              shadeClose: true,
+              shade: false,
+              area: ['500px', '400px'],
+              fixed: false, //不固定
+              maxmin: true,
+              content: '/app/addApp'
+            });
+        }
+
+        //修改系统
+        function modifyUser(){
+            //没有选中行，就返回
+            var appCode = getSelectRow('tableBody',1);
+            if(typeof(loginName) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:5});
+                return;
+            }
+            //编辑选中行
+            layer.open({
+              type: 2,
+              title: '修改系统',
+              shadeClose: true,
+              shade: false,
+              area: ['500px', '400px'],
+              fixed: false, //不固定
+              maxmin: true,
+              content: '/app/modifyApp?appCode='+appCode
+            });
+        }
+
+        //删除系统
+        function deleteApp(){
+            //没有选中行，就返回
+            var appCode = getSelectRow('tableBody',1);
+            if(typeof(loginName) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:5});
+                return;
+            }
+            //删除选中行
+            $.post('/app/deleteApp',
+                {appCode:appCode},
+                function(data){
+                    if(data.flag){
+                        layer.msg('删除成功！',{time: 2000, icon:6});
+                        init();
+                    }else{
+                        layer.msg(data.msg,{time: 2000, icon:5});
+                    }
+            });
+        }
+
+        //渲染分页
+        function refreshPage(elemid,count){
+            layui.use(['laypage', 'layer'], function(){
+                var laypage = layui.laypage
+                ,layer = layui.layer;
+
+                laypage.render({
+                    elem: elemid //分页对象id
+                    ,count: count //数据总数
+                    ,layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+                    ,jump: function(obj){
+                        <!--alert(JSON.stringify(obj))-->
+                        //调用表格渲染方法
+                        refreshTable(obj.curr,obj.limit);
+                    }
+                });
+            });
+        }
+
+        // 渲染列表
+        function refreshTable(pageIndex,pageSize){
+            var searchObj = getSearchRegionJsonObject('searchDiv');
+            searchObj['pageIndex']=pageIndex;
+            searchObj['pageSize']=pageSize;
+
+            $.post('/app/appPage',
+                searchObj,
+                function(data){
+                    initData = data;
+                    <!--var html = template('table1', data);-->
+                    <!--document.getElementById('content').innerHTML = html;-->
+                    //初始化航选中操作
+                    initTrSelected('tableBody');
+            });
+        }
+
+        // 渲染列表
+        function init(){
+            var searchObj = getSearchRegionJsonObject('searchDiv');
+            searchObj['pageIndex']=1;
+            searchObj['pageSize']=10;
+
+            $.post('/app/appPage',
+                searchObj,
+                function(data){
+                    refreshPage('tablePage',data.totalElements);
+            });
+        }
+        init()
+
+
+    </script>
+</section>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/layout">
+<head>
+    <title>UAM-机构列表</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divLeft" style="float:left;width:20%;">
+    </div>
+    <div id="divRight" style="float:left;width:80%;">
+        <div>
+            <a class="btn btn-primary radius" href="javascript:;" onclick="javascript:init();" style="float:right;"><i
+                    class="Hui-iconfont">&#xe665;</i></a>
+            <input type="text" placeholder="搜索：机构编码、机构名称、父级机构、城市编码、城市名称" class="input-text radius size-M" name="searchCondition"
+                   id="searchCondition" style="width: 400px;float:right;"/>
+            <a class="btn btn-primary radius" type="button" id="add"
+               onclick="addOrg()"><i class="Hui-iconfont">&#xe604;</i>添加</a>
+            <a class="btn btn-primary radius" type="button" id="edit" onclick="modifyOrg()"><i
+                    class="Hui-iconfont">&#xe60c;</i>修改</a>
+            <!--<a class="btn btn-danger radius" type="button" id="delete" onclick="deleteOrg()">-->
+                <!--<i class="Hui-iconfont">&#xe609;</i>删除</a>-->
+        </div>
+
+        <div id="content" style="margin-top:10px;">
+            <script type="text/html" id="table1">
+                <table class="table table-border table-bordered table-bg table-hover table-sort table-striped radius">
+                    <thead>
+                    <tr>
+                        <td width="30"><b>No.</b></td>
+                        <td><b>机构编码</b></td>
+                        <td><b>机构名称</b></td>
+                        <td><b>机构等级</b></td>
+                        <td><b>父级机构编码</b></td>
+                        <td><b>父级机构名称</b></td>
+                        <td><b>机构地址</b></td>
+                        <td><b>城市编码</b></td>
+                        <td><b>城市名称</b></td>
+                        <td><b>是否有效</b></td>
+                        <!--<td><b>创建人</b></td>-->
+                        <!--<td><b>创建时间</b></td>-->
+                        <!--<td><b>更新人</b></td>-->
+                        <!--<td><b>更新时间</b></td>-->
+                    </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    {{each content}}
+                    <tr>
+                        <td>{{$index+1}}</td>
+                        <td>{{$value.orgCode}}</td>
+                        <td>{{$value.orgName}}</td>
+                        <td>{{$value.orgLevel}}</td>
+                        <td>{{$value.parentOrgCode}}</td>
+                        <td>{{$value.parentOrgName}}</td>
+                        <td>{{$value.address}}</td>
+                        <td>{{$value.cityCode}}</td>
+                        <td>{{$value.cityName}}</td>
+                        <td>{{$value.enable=='ENABLED'?'启用':'禁用'}}</td>
+                        <!--<td>{{$value.creator}}</td>-->
+                        <!--<td>{{$value.createTime | dateFormat:'yyyy-MM-dd hh:mm:ss'}}</td>-->
+                        <!--<td>{{$value.updateUser}}</td>-->
+                        <!--<td>{{$value.updateTime | dateFormat:'yyyy-MM-dd hh:mm:ss'}}</td>-->
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </script>
+        </div>
+        <div id="tablePage"></div>
+    </div>
+    <script type="text/javascript">
+        var orgData ;
+
+        // 打开添加页
+        function addOrg(){
+            layer.open({
+              type: 2,
+              title: '添加机构',
+              shade: 0.4,
+              area: ['500px', '650px'],
+              content: '/org/addOrg'
+            });
+        }
+
+        //修改机构
+        function modifyOrg(){
+            //没有选中行，就返回
+            var orgCode = getSelectRow('tableBody',1);
+            if(typeof(orgCode) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:0});
+                return;
+            }
+            //编辑选中行
+            layer.open({
+              type: 2,
+              title: '修改机构',
+              shade: 0.4,
+              area: ['500px', '650px'],
+              content: '/org/modifyOrg?orgCode='+orgCode
+            });
+        }
+
+        //删除机构
+        function deleteOrg(){
+            //没有选中行，就返回
+            var orgCode = getSelectRow('tableBody',1);
+            if(typeof(orgCode) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:0});
+                return;
+            }
+            var orgName = getSelectRow('tableBody',2);
+            //删除询问框
+            layer.confirm('确定要删除 '+orgName+' 吗？', {
+              btn: ['确定','取消'] //按钮
+            }, function(){
+                //删除选中行
+                $.post('/api/org/deleteOrg',
+                    {orgCode:orgCode},
+                    function(data){
+                        if(data.flag){
+                            layer.msg('删除成功！',{time: 2000, icon:6});
+                            init();
+                        }else{
+                            layer.msg(data.msg,{time: 2000, icon:5});
+                        }
+                });
+            }, function(){
+            });
+        }
+
+        //渲染分页
+        function refreshPage(elemid,count){
+            layui.use(['laypage', 'layer'], function(){
+                var laypage = layui.laypage
+                ,layer = layui.layer;
+
+                laypage.render({
+                    elem: elemid //分页对象id
+                    ,count: count //数据总数
+                    ,layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+                    ,jump: function(obj){
+                        <!--alert(JSON.stringify(obj))-->
+                        //调用表格渲染方法
+                        refreshTable(obj.curr,obj.limit);
+                    }
+                });
+            });
+        }
+
+        // 渲染列表
+        function refreshTable(pageIndex,pageSize){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=pageIndex;
+            searchObj['pageSize']=pageSize;
+
+            $.post('/api/org/orgPage',
+                searchObj,
+                function(data){
+                    var html = template('table1', data);
+                    document.getElementById('content').innerHTML = html;
+                    //初始化航选中操作
+                    initTrSelected('tableBody');
+            });
+        }
+
+        // 组织结构节点，点击事件
+        function orgClick(orgCode){
+            // 修改组织机构树的展示
+            var div = $('#li_'+orgCode).children('div')
+            if(div.css('display') == 'none'){
+                div.append(refreshOrgNode(orgCode))
+                div.css('display','block')
+            }else{
+                div.empty()
+                div.css('display','none')
+            }
+            //联动表格展示
+            $('#searchCondition').val(orgCode)
+            refreshPage('tablePage',1)
+        }
+
+        // 刷新组织机构节点
+        function refreshOrgNode(orgCode){
+            var content = ''
+            content += '<ul class="ulTree">'
+            // 不传入orgCode表示需要根节点
+            if(typeof(orgCode) == 'undefined'){
+                for(index in orgData){
+                    if((orgData[index]['parentOrgCode'] == '0')|| (orgData[index]['parentOrgCode'].length == 0)){
+                        content += getLiContent(orgData[index])
+                    }
+                }
+            }else{
+                for(index in orgData){
+                    if(orgData[index]['parentOrgCode'] == orgCode){
+                        content += getLiContent(orgData[index])
+                    }
+                }
+            }
+            content += '</ul>'
+            return content
+        }
+
+        // 拼接li元素内容
+        function getLiContent(data){
+            var orgCode = data['orgCode']
+            var orgName = data['orgName']
+            content = '<li id="li_'+orgCode+'">'
+            content += '<input type="hidden" value="'+orgCode+'"/>'
+            content += '<h4 class="ulTreeH4" onclick="orgClick('+orgCode+')"><i class="Hui-iconfont">'+getIconCode(orgCode)+'</i>&nbsp;'+orgName+'</h4>'
+            content += '<div class="ulTreeDiv"></div>'
+            content += '</li>'
+            return content
+        }
+
+        // 获取机构图标，如果有子机构就返回+ ，如果没有子机构就返回‘小房子’
+        function getIconCode(code){
+            var iconcode = '&#xe67f;' //机构图标
+            for(i in orgData){
+                if(orgData[i]['parentOrgCode'] == code){
+                    iconcode = '&#xe600;' //加号图标
+                    break
+                }
+            }
+            return iconcode
+        }
+
+        // 渲染列表
+        function init(){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=1;
+            searchObj['pageSize']=10;
+            // 初始化表格
+            $.post('/api/org/orgPage',
+                searchObj,
+                function(data){
+                    refreshPage('tablePage',data.totalElements);
+            });
+            //初始化组织机构树
+            $.get('/api/org/orgFind',
+                {},
+                function(data){
+                    orgData = data;
+                    $('#divLeft').empty();
+                    $('#divLeft').append(refreshOrgNode());
+            });
+        }
+        init()
+    </script>
+</section>
+</body>
+</html>

@@ -1,0 +1,33 @@
+统一授权管理系统
+    1、提供“统一授权服务”，用来实现对多个业务系统的统一登录、授权配置及验证。
+    2、通过spring-session，将session信息保存到redis中。
+        “统一授权服务”系统将产生的ticket信息也保存到redis中，从而支持分布式部署。
+
+对接业务系统
+    1、登录
+        业务系统中通过filter来检查当有授权控制的uri被访问时，检查session中的user是否存在。
+        如果不存在，就重定向到“统一授权管理系统”。
+            重定向链接中需要添加2个参数：targetUrl，表示实际访问路径；
+                                        targetAppCode，表示目标系统编码。
+                                            目标系统编码要与在统一授权管理系统中配置的系统编码一致。
+        重定向链接示例：http://localhost/?targetUrl=http://1.2.3.4/product/productList&targetAppCode=product
+        在 统一授权管理系统 登录成功后。浏览器会重定向到实际访问路径(targetUrl)，并带有一个ticket参数。
+        返回重定向链接示例：http://1.2.3.4/product/productList?ticket=1qaz2wsx3edc4rfv
+    2、验证
+        业务系统拿到ticket之后，通过接口获取权限信息。
+            地址：http://localhost/login/checkTicket?ticket=1qaz2wsx3edc4rfv
+            返回格式：JSONObject
+                object.user                     用户信息
+                object.commission_role_list     授权角色列表
+                object.commission_resource_list 授权资源列表
+    3、退出登录
+        http://localhost/login/logout
+    4、修改密码
+        POST
+        http://localhost/api/user/savePassword
+        {loginName:loginName,oldPassword:oldPassword,password:password}
+
+
+
+	
+	

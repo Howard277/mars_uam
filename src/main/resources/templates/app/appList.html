@@ -1,0 +1,166 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/layout">
+<head>
+    <title>UAM-应用程序列表</title>
+</head>
+<body>
+<section layout:fragment="content">
+
+    <div>
+        <a class="btn btn-primary radius" href="javascript:;" onclick="javascript:init();" style="float:right;"><i
+                class="Hui-iconfont">&#xe665;</i></a>
+        <input type="text" placeholder="搜索：系统编码、系统名称" class="input-text radius size-M" name="searchCondition"
+               id="searchCondition" style="width: 300px;float:right;"/>
+        <a class="btn btn-primary radius" type="button" id="add"
+           onclick="addApp()"><i class="Hui-iconfont">&#xe604;</i>添加</a>
+        <a class="btn btn-primary radius" type="button" id="edit" onclick="modifyApp()"><i
+                class="Hui-iconfont">&#xe60c;</i>修改</a>
+        <a class="btn btn-danger radius" type="button" id="delete" onclick="deleteApp()"><i class="Hui-iconfont">&#xe609;</i>删除</a>
+    </div>
+
+    <br/>
+    <div id="divContent">
+        <script type="text/html" id="table1">
+            <table class="table table-border table-bordered table-bg table-hover table-sort table-striped radius">
+                <thead>
+                <tr>
+                    <td width="30"><b>No.</b></td>
+                    <td><b>系统编码</b></td>
+                    <td><b>系统名称</b></td>
+                    <td><b>系统url</b></td>
+                    <td><b>描述</b></td>
+                    <td><b>创建人</b></td>
+                    <td><b>创建时间</b></td>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                {{each content}}
+                <tr>
+                    <td>{{$index + 1}}</td>
+                    <td>{{$value.appCode}}</td>
+                    <td>{{$value.appName}}</td>
+                    <td>{{$value.url}}</td>
+                    <td>{{$value.description}}</td>
+                    <td>{{$value.creator}}</td>
+                    <td>{{$value.createTime | dateFormat:'yyyy-MM-dd hh:mm:ss'}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </script>
+    </div>
+    <div id="tablePage"></div>
+
+    <script>
+        // 打开添加页
+        function addApp() {
+            layer.open({
+                type: 2,
+                title: '添加系统',
+                shade: 0.4,
+                area: ['500px', '400px'],
+                content: '/app/addApp'
+            });
+        }
+
+        //修改系统
+        function modifyApp() {
+            //没有选中行，就返回
+            var appCode = getSelectRow('tableBody', 1);
+            if (typeof(appCode) == 'undefined') {
+                layer.msg('请选择一行', {time: 2000, icon: 0});
+                return;
+            }
+            //编辑选中行
+            layer.open({
+                type: 2,
+                title: '修改系统',
+                shade: 0.4,
+                area: ['500px', '350px'],
+                content: '/app/modifyApp?appCode=' + appCode
+            });
+        }
+
+        //删除系统
+        function deleteApp() {
+            //没有选中行，就返回
+            var appCode = getSelectRow('tableBody', 1);
+            if (typeof(appCode) == 'undefined') {
+                layer.msg('请选择一行', {time: 2000, icon: 0});
+                return;
+            }
+            var appName = getSelectRow('tableBody', 2);
+            //删除询问
+            layer.confirm('确定要删除,' + appName + ' 吗？', {
+                btn: ['确定', '取消'] //按钮
+            }, function () {
+                //删除选中行
+                $.post('/api/app/deleteApp',
+                    {appCode: appCode},
+                    function (data) {
+                        if (data.flag) {
+                            layer.msg('删除成功！', {time: 2000, icon: 6});
+                            init();
+                        } else {
+                            layer.msg(data.msg, {time: 2000, icon: 5});
+                        }
+                    });
+            }, function () {
+            });
+
+        }
+
+        //渲染分页
+        function refreshPage(elemid, data) {
+            layui.use(['laypage', 'layer'], function () {
+                var laypage = layui.laypage
+                    , layer = layui.layer;
+
+                laypage.render({
+                    elem: elemid //分页对象id
+                    , count: data.totalElements //数据总数
+                    , layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+                    , jump: function (obj) {
+                        //调用表格渲染方法
+                        refreshTable(obj.curr, obj.limit);
+                    }
+                });
+            });
+        }
+
+        // 渲染列表
+        function refreshTable(pageIndex, pageSize) {
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex'] = pageIndex;
+            searchObj['pageSize'] = pageSize;
+
+            $.post('/api/app/appPage',
+                searchObj,
+                function (data) {
+                    var html = template('table1', data);
+                    document.getElementById('divContent').innerHTML = html;
+                    //初始化航选中操作
+                    initTrSelected('tableBody');
+                });
+        }
+
+        // 渲染列表
+        function init() {
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex'] = 1;
+            searchObj['pageSize'] = 10;
+
+            $.post('/api/app/appPage',
+                searchObj,
+                function (data) {
+                    refreshPage('tablePage', data);
+                });
+        }
+
+        init()
+
+
+    </script>
+</section>
+</body>
+</html>

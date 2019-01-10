@@ -1,0 +1,104 @@
+/**
+* 悬浮在顶部的工具栏
+*/
+.top_left_toolbar{
+    position:fixed;
+    top:0px;
+    left:0px;
+    padding:3px;
+}
+/**
+* 悬浮在底部的工具栏
+*/
+.bottom_right_toolbar{
+    position:fixed;
+    bottom:0px;
+    right:0px;
+    padding:3px;
+}
+/**
+* 悬浮在顶部的内容部分
+*/
+.top_content{
+    height:calc(100% - 40px);
+    width:100%;
+    overflow:auto;
+    position:fixed;
+    top:0px;
+    left:0px;
+    padding:5px;
+}
+/**
+* 悬浮在底部的内容部分
+*/
+.bottom_content{
+    height:calc(100% - 40px);
+    width:100%;
+    overflow:auto;
+    position:fixed;
+    top:40px;
+    left:0px;
+    padding:5px;
+}
+/**
+* app div项展示风格
+*/
+.divAppItem{
+    display:inline-block;
+    margin:5px;
+    border:3px solid #5A98DE;
+    border-radius:10px;
+    height:100px;
+    width:300px;
+    text-align:center;
+    cursor:hand;
+    padding:5px;
+    background-color:#F9F9F9;
+    overflow: auto;
+}
+
+.divAppItemMouseOver{
+    border-color:#009688;
+}
+
+.ulTree{
+    cursor:hand;
+}
+
+.ulTreeH4{
+    padding:2px;
+    border:solid black 1 ;
+    background-color: #F9F9F9;
+}
+
+.ulTreeDiv {
+    display:none;
+    margin-left:20px;
+}
+
+
+/**
+* service instance div项展示风格
+*/
+.divServiceInstance{
+    display:inline-block;
+    margin:5px;
+    border:3px solid #5A98DE;
+    border-radius:10px;
+    min-width:400px;
+    cursor:hand;
+    padding:5px;
+    background-color:#F9F9F9;
+}
+
+.divServiceInstanceMouseOver{
+    border-color:#009688;
+}
+
+.divServiceInstanceOut{
+    border-color:red;
+}
+
+.divServiceInstance h1 h2 h3 h4 h5 h6{
+    text-align:center;
+}

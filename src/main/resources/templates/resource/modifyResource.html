@@ -1,0 +1,223 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>修改资源</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent" style="padding:10px;">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统编码</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统编码" class="input-text radius size-M" name="appCode"
+                           id="appCode"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统名称" class="input-text radius size-M" name="appName"
+                           id="appName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">父级资源编码</label>
+                <div class="formControls col-xs-7">
+                    <input type="text" placeholder="父级资源编码" class="input-text radius size-M" name="parentResourceCode"
+                           id="parentResourceCode"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="choiceResource()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">父级资源名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="父级资源名称" class="input-text radius size-M" name="parentResourceName"
+                           id="parentResourceName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">资源编码</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="资源编码" class="input-text radius size-M" name="resourceCode"
+                           id="resourceCode" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">资源名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="资源名称" class="input-text radius size-M" name="resourceName"
+                           id="resourceName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">资源路径</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="资源路径" class="input-text radius size-M" name="resourcePath"
+                           id="resourcePath"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">资源排序编号</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="资源排序编号" class="input-text radius size-M" name="sortNo"
+                           id="sortNo"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">是否有效</label>
+                <div class="formControls col-xs-9">
+                    <select class="select" name="enable">
+                        <option value="ENABLED">有效</option>
+                        <option value="DISABLED">无效</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">角色配置</label>
+                <div class="formControls col-xs-7">
+                    <textarea placeholder="角色配置" class="radius size-M" name="roles" cols="35" rows="5"
+                           id="roles"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="choiceRolesForResource()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">描述</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="描述" class="input-text radius size-M" name="description"
+                           id="description"/>
+                </div>
+            </div>
+            <div class="row cl text-r">
+                <div class="formControls col-xs-12">
+                    <a class="btn btn-primary radius size-M" type="button" id="submit" onclick="submit()"><i
+                            class="Hui-iconfont">&#xe603;</i>提交</a>
+                    <a class="btn btn-primary radius size-M" type="button" id="cancel"
+                       onclick="init()"><i
+                            class="Hui-iconfont">&#xe66b;</i>取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+
+    //保存原始数据
+    var initData = [[${resource}]];
+
+    //初始化操作
+    function init(){
+        fillRegionByObj('divContent',initData);
+    }
+
+    init();
+
+    // 提交
+    function submit(){
+        var obj = getSearchRegionJsonObject('divContent');
+        if(obj['resourceCode'].length==0){
+            layer.msg('资源编码必填！', {icon: 5});
+            return
+        }
+        if(obj['resourceName'].length==0){
+            layer.msg('资源名称必填！', {icon: 5});
+            return
+        }
+        if(obj['appCode'].length==0){
+            layer.msg('所属系统必填！', {icon: 5});
+            return
+        }
+        if(obj['sortNo'].length==0){
+            layer.msg('资源排序编号！', {icon: 5});
+            return
+        }
+
+       $.ajax({
+            type: "POST",
+            url: "/api/resource/saveResource",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: JSON.stringify(obj),
+            success: function (data) {
+                if(data.flag){
+                     layer.alert('提交成功！',{closeBtn: 0}, function(index){
+                        layer.close(index);//关闭alert框
+                        window.parent.init()//刷新父界面中的列表
+                        //关闭详情框
+                        var parentIndex = parent.layer.getFrameIndex(window.name);
+	                    parent.layer.close(parentIndex);
+                    });
+                }else{
+                    layer.msg(data.msg, {icon: 5});
+                }
+            }
+        });
+    }
+
+    //选择资源
+    function choiceResource(){
+        parent.layer.open({
+              type: 2,
+              title: '选择资源',
+              shade: 0.4,
+              area: ['1000px', '400px'],
+              fixed: false, //不固定
+              content: '/choice/choiceResource',
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!=typeof(storage.newResourceCode)){
+                    $('#parentResourceCode').val(storage.newResourceCode);
+                    $('#parentResourceName').val(storage.newResourceName);
+                    storage.removeItem('newResourceCode');
+                    storage.removeItem('newResourceName');
+                }
+              }
+            });
+    }
+
+    // 为资源配置角色
+    function choiceRolesForResource(){
+        var appCode = $('#appCode').val().trim();
+        if(appCode.length == 0){
+            layer.msg('请先选择所属系统！', {icon: 0});
+            return;
+        }
+
+        var arrayRoles = [];
+        var roles = $('#roles').val().trim();
+        if(0!=roles.length){
+            var objRoles = JSON.parse(roles);
+            if('undefined' != objRoles){
+                for(var key in objRoles){
+                    arrayRoles.push(key);
+                }
+            }
+        }
+
+        parent.layer.open({
+              type: 2,
+              title: '选择角色',
+              shade: 0.4,
+              area: ['600px', '400px'],
+              fixed: false, //不固定
+              content: '/choice/choiceRolesForResource?appCode='+appCode+'&amp;roles='+arrayRoles.join('|'),
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!= typeof(storage.newRoles)){
+                    $('#roles').val(storage.newRoles);
+                    storage.removeItem('newRoles');
+                }
+              }
+            });
+    }
+
+
+    </script>
+</section>
+</body>
+</html>

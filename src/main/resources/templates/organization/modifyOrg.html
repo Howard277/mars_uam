@@ -1,0 +1,226 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>修改机构</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent" style="padding:10px;">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">父机构编码</label>
+                <div class="formControls col-xs-7">
+                    <input type="text" placeholder="父机构编码" class="input-text radius size-M" name="parentOrgCode"
+                           id="parentOrgCode" readonly="readonly"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="parentOrgChoice()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">父机构名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="父机构名称" class="input-text radius size-M" name="parentOrgName"
+                           id="parentOrgName" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构编码</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="机构编码" class="input-text radius size-M" name="orgCode" id="orgCode"
+                           readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="机构名称" class="input-text radius size-M" name="orgName" id="orgName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构等级</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="机构等级" class="input-text radius size-M" name="orgLevel"
+                           id="orgLevel"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构地址</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="机构地址" class="input-text radius size-M" name="address" id="address"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">城市编码</label>
+                <div class="formControls col-xs-7">
+                    <input type="text" placeholder="城市编码" class="input-text radius size-M" name="cityCode" id="cityCode"
+                           readonly="readonly"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="cityChoice()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">城市名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="城市名称" class="input-text radius size-M" name="cityName" id="cityName"
+                           readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构类型</label>
+                <div class="formControls col-xs-9">
+                    <select class="select" name="type">
+                        <option value="O" selected="selected">机构</option>
+                        <option value="F">分中心</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">是否有效</label>
+                <div class="formControls col-xs-9">
+                    <select class="select" name="enable">
+                        <option value="ENABLED" selected="selected">启用</option>
+                        <option value="DISABLED">禁用</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">来源城市</label>
+                <div class="formControls col-xs-7">
+                    <textarea placeholder="来源城市" class="radius size-M" name="sourceCity" cols="35" rows="5"
+                              id="sourceCity" readonly="readonly"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="choiceSourceCity()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl text-r">
+                <div class="formControls col-xs-12">
+                    <a class="btn btn-primary radius size-M" type="button" id="submit" onclick="submit()"><i
+                            class="Hui-iconfont">&#xe603;</i>提交</a>
+                    <a class="btn btn-primary radius size-M" type="button" id="cancel" onclick="init()"><i
+                            class="Hui-iconfont">&#xe66b;</i>取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+    //保存原始数据
+    var initData = [[${org}]];
+    var storage = window.localStorage;
+
+    //初始化操作
+    function init(){
+        //初始化界面元素中的数据
+        fillRegionByObj('divContent',initData);
+    }
+
+    init();
+
+    // 提交
+    function submit(){
+        var orgObj = getSearchRegionJsonObject('divContent');
+        if(orgObj['orgCode'].length==0){
+            layer.msg('机构编码必填！', {icon: 5});
+            return
+        }
+        if(orgObj['orgName'].length==0){
+            layer.msg('组织名称编码必填！', {icon: 5});
+            return
+        }
+        if(orgObj['parentOrgCode'].length==0){
+            layer.msg('父机构编码必填！', {icon: 5});
+            return
+        }
+
+       $.ajax({
+            type: "POST",
+            url: "/api/org/saveOrg",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: JSON.stringify(orgObj),
+            success: function (data) {
+                if(data.flag){
+                     layer.alert('提交成功！',{closeBtn: 0}, function(index){
+                        layer.close(index);//关闭alert框
+                        window.parent.init()//刷新父界面中的列表
+                        //关闭详情框
+                        var parentIndex = parent.layer.getFrameIndex(window.name);
+	                    parent.layer.close(parentIndex);
+                    });
+                }else{
+                    layer.msg(data.msg, {icon: 5});
+                }
+            }
+        });
+    }
+
+    //选择父级机构
+    function parentOrgChoice(){
+        parent.layer.open({
+              type: 2,
+              title: '选择父级机构',
+              shade: 0.4,
+              area: ['800px', '570px'],
+              content: '/choice/choiceOrg',
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!=typeof(storage.newOrgCode)){
+                    $('#parentOrgCode').val(storage.newOrgCode);
+                    $('#parentOrgName').val(storage.newOrgName);
+                    storage.removeItem('newOrgCode');
+                    storage.removeItem('newOrgName');
+                }
+              }
+            });
+    }
+
+    //选择城市
+    function cityChoice(){
+        parent.layer.open({
+              type: 2,
+              title: '选择城市',
+              shade: 0.4,
+              area: ['800px', '570px'],
+              content: '/choice/choiceCity',
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!=typeof(storage.newCityCode)){
+                    $('#cityCode').val(storage.newCityCode);
+                    $('#cityName').val(storage.newCityName);
+                    storage.removeItem('newCityCode');
+                    storage.removeItem('newCityName');
+                }
+              }
+            });
+    }
+
+    // 选择来源城市
+    function choiceSourceCity(){
+        //从界面元素中读取来源城市信息
+        storage.sourceCityArray = $('#sourceCity').val();
+        //打开来源城市修改界面
+        parent.layer.open({
+              type: 2,
+              title: '选择来源城市',
+              shade: 0.4,
+              area: ['800px', '650px'],
+              fixed: false, //不固定
+              content: '/choice/choiceSourceCity',
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!= typeof(storage.newSourceCityArray)){
+                    $('#sourceCity').val(storage.newSourceCityArray);
+                    storage.removeItem('newSourceCityArray');
+                }
+              }
+            });
+    }
+    </script>
+</section>
+</body>
+</html>

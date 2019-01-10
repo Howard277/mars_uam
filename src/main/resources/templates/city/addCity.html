@@ -1,0 +1,100 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>添加城市</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">城市编码</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="城市编码" class="input-text radius size-M" name="cityCode"
+                           id="cityCode"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">城市名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="城市名称" class="input-text radius size-M" name="cityName"
+                           id="cityName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">城市等级</label>
+                <div class="formControls col-xs-9">
+                    <span class="select-box">
+                        <select class="select" id="levelCode" name="levelCode">
+                            <option value="" selected="selected">请选择城市等级</option>
+                            <option value="1">一线城市</option>
+                            <option value="1.5">1.5线城市</option>
+                            <option value="2">二线城市</option>
+                        </select>
+                    </span>
+                </div>
+            </div>
+            <div class="row cl text-r">
+                <div class="formControls col-xs-12">
+                    <a class="btn btn-primary radius size-M" type="button" id="submit" onclick="submit()"><i
+                            class="Hui-iconfont">&#xe603;</i>提交</a>
+                    <a class="btn btn-primary radius size-M" type="button" id="cancel"
+                       onclick="javascript:clearSearchRegion('divContent');"><i
+                            class="Hui-iconfont">&#xe66b;</i>取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+
+    // 提交
+    function submit(){
+        var obj = getSearchRegionJsonObject('divContent');
+
+        if(obj['cityCode'].length==0){
+            layer.msg('城市编码必填！', {icon: 0});
+            return
+        }
+        if(obj['cityName'].length==0){
+            layer.msg('城市名称必填！', {icon: 0});
+            return
+        }
+        if(obj['levelCode'].length==0){
+            layer.msg('城市等级必填！', {icon: 0});
+            return
+        }
+        obj['levelName'] = $('#levelCode').find("option:selected").text();
+
+        $.get('/api/city/checkCityCode?cityCode='+obj['cityCode'],
+            function(data){
+                if(data.flag){
+                    $.ajax({
+                        type: "POST",
+                        url: "/api/city/saveCity",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify(obj),
+                        success: function (data) {
+                            if(data.flag){
+                                 layer.alert('提交成功！',{closeBtn: 0}, function(index){
+                                    layer.close(index);//关闭alert框
+                                    window.parent.init()//刷新父界面中的列表
+                                    //关闭详情框
+                                    var parentIndex = parent.layer.getFrameIndex(window.name);
+                                    parent.layer.close(parentIndex);
+                                });
+                            }else{
+                                layer.msg(data.msg, {icon: 5});
+                            }
+                        }
+                    });
+                }else{
+                    layer.msg(data.msg, {icon: 5});
+                }
+            });
+    }
+
+    </script>
+</section>
+</body>
+</html>

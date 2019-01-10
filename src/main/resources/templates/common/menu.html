@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="menu">
+    <header class="navbar-wrapper">
+        <div class="navbar navbar-black">
+            <a class="logo" href="/home/index" style="margin-left:20px;font-size:18px;">统一权限管理系统</a>
+            <nav class="nav navbar-nav nav-collapse" role="navigation" id="Hui-navbar">
+                <ul class="cl">
+                    <li th:each="resource : ${session.uam_commission_resource_list}">
+                        <a th:href="${resource.resourcePath}" th:text="${resource.resourceName}"></a>
+                    </li>
+                </ul>
+                <ul class="cl" style="position:absolute; right:0px; top:0px;">
+                    <li style="text-align:right;">
+                    <span style="cursor:hand;" onclick="showInfo();" title="查看个人信息">
+                    <span>你好，</span>
+                    <span th:text="${session.user.userName}"></span></span>
+                        <a href="/login/logout"><i class="Hui-iconfont">&#xe726;</i>退出</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <script>
+        function showInfo(){
+            layer.open({
+              type: 2,
+              title: '用户信息',
+              shade: 0.4,
+              area: ['500px', '280px'],
+              fix: false, //不固定
+              content: '/user/showUserInfo'
+            });
+        }
+
+
+    </script>
+</div>
+</body>
+</html>

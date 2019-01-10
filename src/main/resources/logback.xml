@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 10秒钟自动扫描一次配置文件 -->
+<configuration scan="true" scanPeriod="10 seconds" debug="false">
+    <springProperty scope="context" name="logLevel" source="logging.level"/>
+    <!-- 定义log文件根目录 -->
+    <property name="loghome" value="./logs"></property>
+
+    <!-- 控制台输出 -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{30} - %m%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!--一般日志文件输出-->
+    <appender name="filelog"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${loghome}/log%d{yyyy-MM-dd}.log
+            </FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{30} - %m%n
+            </pattern>
+        </encoder>
+        <!-- 输出info及以上级别信息 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>info</level>
+        </filter>
+    </appender>
+
+    <!-- 重要日志文件输出 -->
+    <appender name="importantfilelog"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--日志文件输出的文件名 -->
+            <FileNamePattern>${loghome}/importantlog%d{yyyy-MM-dd}.log
+            </FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{30} - %m%n
+            </pattern>
+        </encoder>
+        <!-- 输出error及以上级别信息 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>error</level>
+        </filter>
+    </appender>
+
+    <!--hibernate单独指定-->
+    <logger name="org.hibernate.type" level="${logLevel}" additivity="false">
+        <appender-ref ref="stdout"/>
+    </logger>
+
+    <logger name="org.springframework" level="info">
+        <appender-ref ref="stdout"/>
+    </logger>
+
+    <!-- 根logger，配置项目下所有debug级别 -->
+    <root level="${logLevel}">
+        <appender-ref ref="stdout"></appender-ref>
+        <appender-ref ref="filelog"></appender-ref>
+        <appender-ref ref="importantfilelog"></appender-ref>
+    </root>
+</configuration>

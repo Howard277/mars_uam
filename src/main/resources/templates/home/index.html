@@ -1,0 +1,32 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/layout">
+<head>
+    <title>UAM-主页</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <p>您可以访问的系统：</p>
+    <div id="divContent">
+        <script type="text/html" id="table1">
+            {{each content}}
+            <div class="divAppItem"
+                 onmouseover="javascript:$(this).addClass('divAppItemMouseOver');"
+                 onmouseleave="javascript:$(this).removeClass('divAppItemMouseOver');"
+                onclick="javascript:window.open($(this).children().eq(0).val());">
+                <input type="hidden" value="{{$value.url}}"/>
+                <h2>{{$value.appName}}</h2>
+                <br/>
+                <span>{{$value.description}}</span>
+            </div>
+            {{/each}}
+        </script>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+        //保存原始数据
+        var data = {content:[[${appList}]]};
+        var html = template('table1', data);
+        document.getElementById('divContent').innerHTML = html;
+    </script>
+</section>
+</body>
+</html>

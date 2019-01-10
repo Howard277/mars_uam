@@ -1,0 +1,116 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/dialogLayout">
+<head>
+    <title>选择角色</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div>
+        <a class="btn btn-primary radius" href="javascript:;" onclick="javascript:init();" style="float:right;"><i
+                class="Hui-iconfont">&#xe665;</i></a>
+        <input type="text" placeholder="搜索：角色名称、角色编码、系统名称、系统编码" class="input-text radius size-M" name="searchCondition"
+               id="searchCondition" style="width: 300px;float:right;"/>
+        <a class="btn btn-primary radius size-M" href="javascript:;" onclick="sure();"><i
+                class="Hui-iconfont">&#xe603;</i> 确定</a>
+    </div>
+
+    <div id="content" style="margin-top:10px;">
+        <script type="text/html" id="table1">
+            <table class="table table-border table-bordered table-bg table-hover table-sort table-striped radius">
+                <thead>
+                <tr>
+                    <td width="30"><b>No.</b></td>
+                    <td><b>角色编码</b></td>
+                    <td><b>角色名称</b></td>
+                    <td><b>系统编码</b></td>
+                    <td><b>系统名称</b></td>
+                    <td><b>是否有效</b></td>
+                    <td><b>备注</b></td>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                {{each content}}
+                <tr>
+                    <td>{{$index+1}}</td>
+                    <td>{{$value.roleCode}}</td>
+                    <td>{{$value.roleName}}</td>
+                    <td>{{$value.appCode}}</td>
+                    <td>{{$value.appName}}</td>
+                    <td>{{$value.enable}}</td>
+                    <td>{{$value.description}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </script>
+    </div>
+    <div id="tablePage"></div>
+    <script>
+        //确定按钮
+        function sure(){
+            //没有选中行，就返回
+            var roleCode = getSelectRow('tableBody',1);
+            if(typeof(roleCode) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:0});
+                return;
+            }
+            var storage=window.localStorage;
+            localStorage.newRoleCode=getSelectRow('tableBody',1);
+            localStorage.newRoleName=getSelectRow('tableBody',2);
+            //当你在iframe页面关闭自身时
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(index); //再执行关闭
+        }
+
+        //渲染分页
+        function refreshPage(elemid,count){
+            layui.use(['laypage', 'layer'], function(){
+                var laypage = layui.laypage
+                ,layer = layui.layer;
+
+                laypage.render({
+                    elem: elemid //分页对象id
+                    ,count: count //数据总数
+                    ,layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+                    ,jump: function(obj){
+                        <!--alert(JSON.stringify(obj))-->
+                        //调用表格渲染方法
+                        refreshTable(obj.curr,obj.limit);
+                    }
+                });
+            });
+        }
+
+        // 渲染列表
+        function refreshTable(pageIndex,pageSize){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=pageIndex;
+            searchObj['pageSize']=pageSize;
+
+            $.post('/api/role/rolePage',
+                searchObj,
+                function(data){
+                    var html = template('table1', data);
+                    document.getElementById('content').innerHTML = html;
+                    //初始化航选中操作
+                    initTrSelected('tableBody');
+            });
+        }
+
+        // 渲染列表
+        function init(){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=1;
+            searchObj['pageSize']=10;
+
+            $.post('/api/role/rolePage',
+                searchObj,
+                function(data){
+                    refreshPage('tablePage',data.totalElements);
+            });
+        }
+        init()
+
+    </script>
+</section>
+</body>
+</html>

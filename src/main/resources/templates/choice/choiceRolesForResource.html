@@ -1,0 +1,109 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout">
+<head>
+    <title>选择角色</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="top_left_toolbar">
+        <a class="btn btn-primary radius size-M" href="javascript:;" onclick="sure();"><i
+                class="Hui-iconfont">&#xe603;</i> 确定</a>
+        <a class="btn btn-primary radius size-S" href="javascript:;" onclick="choiceAll()">全部选中</a>
+        <a class="btn btn-primary radius size-S" href="javascript:;" onclick="giveupAll()">全部放弃</a>
+        <a class="btn btn-primary radius size-S" href="javascript:;" onclick="init()">恢复</a>
+    </div>
+    <div id="content" class="bottom_content">
+        <script type="text/html" id="table1">
+            <table class="table table-border table-bordered table-bg table-hover table-sort table-striped radius">
+                <thead>
+                <tr>
+                    <td width="30"><b>No.</b></td>
+                    <td><b>角色名称</b></td>
+                    <td><b>角色编码</b></td>
+                    <td><b>是否有效</b></td>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                {{each roleList}}
+                <tr>
+                    <td>{{$index+1}}</td>
+                    <td>
+                        <div class="check-box">
+                            <input type="checkbox" id="checkbox-{{$value.roleCode}}"/>
+                            <label for="checkbox-{{$value.roleCode}}">{{$value.roleName}}</label>
+                        </div>
+                    </td>
+                    <td>{{$value.roleCode}}</td>
+                    <td>{{$value.enable.$name == 'ENABLED' ? '有效' : '无效'}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </script>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+        //保存原始数据
+        var data = {};
+        data['roleList'] = [[${roleList}]];
+        data['roles'] = [[${roles}]];
+
+        //确定按钮
+        function sure(){
+            //遍历所有被勾选的checkbox，写入到对象中
+            //系统编码为key，系统名称为value
+            var roles = {}
+            $('#tableBody :checked').each(function(){
+                roles[$(this).parent().parent().parent().next().text()] = $(this).parent().next().text();
+            });
+
+            var storage=window.localStorage;
+            storage.newRoles = JSON.stringify(roles);
+            //当你在iframe页面关闭自身时
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(index); //再执行关闭
+        }
+
+        //初始化选中项
+        function init(){
+            //渲染数据
+            var html = template('table1', data);
+            document.getElementById('content').innerHTML = html;
+            //将所有配置过的角色打钩
+            if('undefined'!=data['roles']){
+                var roleArray = new Array();
+                roleArray = data['roles'].split('|');
+                roleArray.forEach(function(role){
+                    $('#tableBody tr').each(function(){
+                        //如果配置角色与当前行的角色编码相同
+                        if(role == $(this).children().eq(2).text()){
+                            $(this).find(':checkbox').attr('checked','checked');
+                        }
+                    });
+                })
+            }
+
+            //初始化复选框
+            icheckInit('content')
+        }
+
+        //执行初始化
+        init();
+
+        //全选操作
+        function choiceAll(){
+            //由于checkbox使用了icheck样式，所以要同时修改icheck样式和checkbox的checked属性
+            $('#content').find('.icheckbox-blue').addClass('checked');
+            $('#content').find(':checkbox').attr('checked','checked');
+        }
+
+        //取消全部
+        function giveupAll(){
+            //由于checkbox使用了icheck样式，所以要同时修改icheck样式和checkbox的checked属性
+            $('#content').find('.icheckbox-blue').removeClass('checked');
+            $('#content').find(':checkbox').removeAttr('checked');
+        }
+
+    </script>
+</section>
+</body>
+</html>

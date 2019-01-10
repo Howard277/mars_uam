@@ -1,0 +1,58 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>用户信息</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">登录名：</label>
+                <div class="formControls col-xs-9">
+                    <span th:text="${session.user.loginName}"></span>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">用户名：</label>
+                <div class="formControls col-xs-9">
+                    <span th:text="${session.user.userName}"></span>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构编码：</label>
+                <div class="formControls col-xs-9">
+                    <span th:text="${session.user.orgCode}"></span>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">机构名称：</label>
+                <div class="formControls col-xs-9">
+                    <span th:text="${session.user.orgName}"></span>
+                </div>
+            </div>
+            <div class="row cl">
+                <div class="formControls col-xs-9 col-xs-offset-3">
+                    <a class="btn btn-primary radius size-M" type="button" id="changePassword" onclick="changePassword()"><i
+                            class="Hui-iconfont">&#xe60c;</i>修改密码</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        //打开修改密码对话框
+        function changePassword(){
+            parent.layer.open({
+              type: 2,
+              title: '修改密码',
+              shadeClose: true,
+              shade: false,
+              area: ['500px', '320px'],
+              fixed: false, //不固定
+              content: '/user/changePassword'
+            });
+        }
+    </script>
+</section>
+</body>
+</html>

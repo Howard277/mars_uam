@@ -1,0 +1,112 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/layout">
+<head>
+    <title>UAM-注册中心-服务实例列表</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="content" style="margin-top:10px;">
+        <div>
+            <span>注册中心地址：</span>
+            <input type="text" placeholder="例如：http://192.168.13.128:8000/" class="input-text radius size-M" style="width: 300px;" name="registerCenterUrl"
+                   id="registerCenterUrl" th:value="${registerCenterUrl}"/>
+            <a class="btn btn-primary radius" type="button" onclick="setRegisterCenterUrl()">
+                <i class="Hui-iconfont">&#xe620;</i>设置</a>
+        </div>
+        <div class="layui-tab layui-tab-card" th:if="${applications != null}">
+            <ul id="ulTitle" class="layui-tab-title">
+                <li th:each="application : ${applications.applications.application}" th:text="${application.name}"></li>
+            </ul>
+            <div id="divContent" class="layui-tab-content">
+                <div th:id="${application.name}" class="layui-tab-item"
+                     th:each="application : ${applications.applications.application}">
+                    <a class="btn btn-primary radius" type="button" th:onclick="|refresh('${application.name}')|">
+                        <i class="Hui-iconfont">&#xe68f;</i>刷新</a>
+                    <hr/>
+                    <div th:each="instance : ${application.instance}" class="divServiceInstance"
+                         onmouseover="javascript:$(this).addClass('divServiceInstanceMouseOver');"
+                         onmouseleave="javascript:$(this).removeClass('divServiceInstanceMouseOver');">
+                        <p style="font-size:20px;">服务名：<span th:text="${instance.app}"></span></p>
+                        <p style="font-size:20px;">实例名：<span th:text="${instance.instanceId}"></span></p>
+                        <p>ip地址：<span th:text="${instance.ipAddr}"></span></p>
+                        <p>health地址：<a target="_blank" th:href="${instance.healthCheckUrl}"
+                                       th:text="${instance.healthCheckUrl}"></a></p>
+                        <p th:if="${instance.status} eq 'UP'">
+                            状态：<span style="color:green;">在线（<span th:text="${instance.status}"></span>）</span></p>
+                        <p th:if="${instance.status} eq 'OUT_OF_SERVICE'">
+                            状态：<span style="color:red;">离线（<span th:text="${instance.status}"></span>）</span></p>
+                        <br/>
+                        <input th:if="${instance.status} eq 'OUT_OF_SERVICE'" class="btn btn-success radius"
+                               type="button" value="实例上线"
+                               th:onclick="|changeServiceStatus('${application.name}','${instance.instanceId}','UP')|"/>
+                        <input th:if="${instance.status} eq 'UP'" class="btn btn-danger radius" type="button"
+                               value="实例下线"
+                               th:onclick="|changeServiceStatus('${application.name}','${instance.instanceId}','OUT_OF_SERVICE')|"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+        $(document).ready(function () {
+            //设置默认选中第一个tab
+            $('#ulTitle').children(':first').addClass('layui-this');
+            $('#divContent').children(':first').addClass('layui-show');
+        })
+
+        function refresh(appName) {
+            var id = '#' + appName
+            $(id).children('div').remove();
+            $.ajax({
+                type: "GET",
+                url: "/registerCenter/getRegisterCenterAppInfo?appName=" + appName,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    $(id).append(data)
+                }
+            });
+        }
+
+        //修改服务实例状态
+        function changeServiceStatus(appId, instanceId, targetStatus) {
+            var obj = {'appId': appId, 'instanceId': instanceId, 'targetStatus': targetStatus}
+            $.ajax({
+                type: "POST",
+                url: "/registerCenter/changeServiceStatus",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(obj),
+                success: function (data) {
+                    if (data.flag) {
+                        layer.msg(data.msg, {icon: 6});
+                    } else {
+                        layer.msg(data.msg, {icon: 5});
+                    }
+                }
+            });
+        }
+
+        //设置注册中心Url地址
+        function setRegisterCenterUrl() {
+            var url = $('#registerCenterUrl').val().trim();
+            if (url.length == 0) {
+                layer.msg('请设置注册中心地址！', {icon: 5});
+                return
+            }
+            $.ajax({
+                type: "GET",
+                url: "/registerCenter/setRegisterCenterUrl?url="+url,
+                success: function (data) {
+                    if (data.flag) {
+                        layer.msg(data.msg, {icon: 6});
+                        location.reload(true);//自动刷新页面
+                    } else {
+                        layer.msg(data.msg, {icon: 5});
+                    }
+                }
+            });
+        }
+    </script>
+</section>
+</body>
+</html>

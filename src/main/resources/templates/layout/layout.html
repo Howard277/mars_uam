@@ -1,0 +1,32 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout">
+    <head>
+        <meta charset="UTF-8"></meta>
+        <script src="/js/artTemplate/template.js"></script>
+        <script src="/js/jquery/jquery-1.8.2.js"></script>
+        <script src="/js/common.js"></script>
+        <script src="/js/h-ui/H-ui.js"></script>
+        <script src="/layui/layui.all.js"></script>
+        <script src="/h-ui.admin/lib/jquery.icheck/jquery.icheck.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="/css/H-ui.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/lib/Hui-iconfont/1.0.8/iconfont.css"/>
+        <link rel="stylesheet" type="text/css" href="/layui/css/layui.css"/>
+        <link rel="stylesheet" type="text/css" href="/h-ui.admin/lib/jquery.icheck/icheck.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/common.css"/>
+
+        <link rel="icon" type="image/png" href="/image/logo.jpg"/>
+        <title>统一授权服务系统</title>
+    </head>
+    <body>
+        <div th:include="common/menu :: menu"></div>
+        <div>
+            <div class="panel panel-default" style="overflow: auto;border-width:0px;">
+                <div class="panel-header">
+                    <span th:text="${title}"></span>
+                </div>
+                <div class="panel-body">
+                    <div layout:fragment="content">content</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,95 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>修改应用系统</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent" style="padding:10px;">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统编号</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统编号" class="input-text radius size-M" name="appCode" id="appCode" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统名称" class="input-text radius size-M" name="appName" id="appName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统url</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统url" class="input-text radius size-M" name="url" id="url"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">描述</label>
+                <div class="formControls col-xs-9">
+            <textarea placeholder="描述信息..." class="input-text radius size-M" name="description"
+                      style="height:80px;" id="description"/>
+                </div>
+            </div>
+            <div class="row cl text-r">
+                <div class="formControls col-xs-12">
+                    <a class="btn btn-primary radius size-M" type="button" id="submit" onclick="submit()"><i
+                            class="Hui-iconfont">&#xe603;</i>提交</a>
+                    <a class="btn btn-primary radius size-M" type="button" id="cancel" onclick="init()"><i
+                            class="Hui-iconfont">&#xe66b;</i>取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+    //保存原始数据
+    var initData = [[${app}]];
+
+    function init(){
+        fillRegionByObj('divContent',initData);
+    }
+
+    init();
+
+    // 提交
+    function submit(){
+        var data = getSearchRegionJsonObject('divContent');
+        if(data['appCode'].length==0){
+            layer.msg('系统编码必填！', {icon: 5});
+            return
+        }
+        if(data['appName'].length==0){
+            layer.msg('系统名称必填！', {icon: 5});
+            return
+        }
+        $.post('/api/app/saveApp',
+            data,
+            function(data){
+                if(data.flag){
+                     layer.alert('提交成功！',{closeBtn: 0}, function(index){
+                        layer.close(index);//关闭alert框
+                        window.parent.init()//刷新父界面中的列表
+                        //关闭详情框
+                        var parentIndex = parent.layer.getFrameIndex(window.name);
+	                    parent.layer.close(parentIndex);
+                    });
+                }else{
+                    layer.msg(data.msg, {icon: 5});
+                }
+            }
+        );
+    }
+
+
+
+
+
+
+
+
+
+    </script>
+</section>
+</body>
+</html>

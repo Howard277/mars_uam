@@ -1,0 +1,179 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml"
+      layout:decorator="layout/dialogLayout">
+<head>
+    <title>选择来源城市</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div>
+        <a class="btn btn-primary radius" href="javascript:;" onclick="javascript:init();" style="float:right;"><i
+                class="Hui-iconfont">&#xe665;</i></a>
+        <input type="text" placeholder="搜索：城市名称、城市编码" class="input-text radius size-M" name="searchCondition"
+               id="searchCondition" style="width: 300px;float:right;"/>
+        <a class="btn btn-success radius size-M" href="javascript:;" onclick="saveSourceCity();"><i
+                class="Hui-iconfont">&#xe603;</i> 保存</a>
+    </div>
+    <div id="divSelectedCity" style="border:1px solid #5A98DE;border-radius:3px;padding:1px;">
+        <p>
+            <a class="btn btn-primary radius size-S" href="javascript:;" onclick="addSourceCity();"><i
+                    class="Hui-iconfont">&#xe603;</i> 添加</a>
+            <a class="btn btn-danger radius size-S" type="button" id="delete" onclick="deleteSourceCity()">
+                <i class="Hui-iconfont">&#xe609;</i>删除</a>
+        </p>
+        <span>已选择的来源城市:</span>
+        <div id="divSelectedCityContent" style="min-height:20px;">
+        </div>
+    </div>
+    <div id="content" style="margin-top:10px;">
+        <script type="text/html" id="table1">
+            <table class="table table-border table-bordered table-bg table-hover table-sort table-striped radius">
+                <thead>
+                <tr>
+                    <td width="30"><b>No.</b></td>
+                    <td><b>城市编码</b></td>
+                    <td><b>城市名称</b></td>
+                    <td><b>城市等级编码</b></td>
+                    <td><b>城市等级名称</b></td>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                {{each content}}
+                <tr>
+                    <td>{{$index+1}}</td>
+                    <td>{{$value.cityCode}}</td>
+                    <td>{{$value.cityName}}</td>
+                    <td>{{$value.levelCode}}</td>
+                    <td>{{$value.levelName}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </script>
+    </div>
+    <div id="tablePage"></div>
+    <script>
+        //存储选择的来源城市
+        var sourceCityArray = [];
+        var storage = window.localStorage;
+
+        //初始化已选择的来源城市
+        function initSelectedSourceCity(){
+            //从storage中解析出来存入本地
+            if('' != storage.sourceCityArray){
+                sourceCityArray = JSON.parse(storage.sourceCityArray);
+                //遍历数据，添加展示
+                for(index in sourceCityArray){
+                    var cityCode = sourceCityArray[index]['cityCode']
+                    var cityName = sourceCityArray[index]['cityName']
+                    $('#divSelectedCityContent').append(
+                        '<div class="check-box"><input type="checkbox" id="checkbox-'+cityCode+'"/><label for="checkbox-'+cityCode+'">'+cityName+'</label></div>'
+                    );
+                }
+            }
+             //初始化复选框
+            icheckInit('divSelectedCityContent')
+        }
+
+        //添加来源城市
+        function addSourceCity(){
+            //没有选中行，就返回
+            var cityCode = getSelectRow('tableBody',1);
+            if(typeof(cityCode) == 'undefined'){
+                layer.msg('请选择一行', {time: 2000, icon:0});
+                return;
+            }
+            var cityName = getSelectRow('tableBody',2);
+            //检查要添加的城市，是否已经在来源城市列表中
+            for(index in sourceCityArray){
+                if(sourceCityArray[index]['cityCode'] == cityCode){
+                    layer.msg('来源城市列表中已包含'+cityName, {time: 2000, icon:0});
+                    return;
+                }
+            }
+            sourceCityArray.push({'cityCode':cityCode,'cityName':cityName});
+            $('#divSelectedCityContent').append(
+                '<div class="check-box"><input type="checkbox" id="checkbox-'+cityCode+'"/><label for="checkbox-'+cityCode+'">'+cityName+'</label></div>'
+            );
+            //初始化复选框
+            icheckInit('divSelectedCityContent')
+        }
+
+        //保存
+        function saveSourceCity(){
+            storage.newSourceCityArray = JSON.stringify(sourceCityArray);
+            //当你在iframe页面关闭自身时
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(index); //再执行关闭
+        }
+
+        //删除来源城市
+        function deleteSourceCity(){
+            $('#divSelectedCityContent :checked').each(function(){
+                var tempCityCode = $(this).attr('id').substring(9);
+                //在数组中删除选中的来源城市
+                 for(index in sourceCityArray){
+                    if(sourceCityArray[index]['cityCode'] == tempCityCode){
+                        sourceCityArray.splice(index,1)
+                        break;
+                    }
+                }
+                //在界面中删除选中的来源城市
+                $(this).parent().parent().remove();
+            });
+        }
+
+        //渲染分页
+        function refreshPage(elemid,count){
+            layui.use(['laypage', 'layer'], function(){
+                var laypage = layui.laypage
+                ,layer = layui.layer;
+
+                laypage.render({
+                    elem: elemid //分页对象id
+                    ,count: count //数据总数
+                    ,layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+                    ,jump: function(obj){
+                        <!--alert(JSON.stringify(obj))-->
+                        //调用表格渲染方法
+                        refreshTable(obj.curr,obj.limit);
+                    }
+                });
+            });
+        }
+
+        // 渲染列表
+        function refreshTable(pageIndex,pageSize){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=pageIndex;
+            searchObj['pageSize']=pageSize;
+
+            $.post('/api/city/cityPage',
+                searchObj,
+                function(data){
+                    var html = template('table1', data);
+                    document.getElementById('content').innerHTML = html;
+                    //初始化航选中操作
+                    initTrSelected('tableBody');
+            });
+        }
+
+
+        // 渲染列表
+        function init(){
+            var searchObj = {"searchCondition": $('#searchCondition').val().trim()};
+            searchObj['pageIndex']=1;
+            searchObj['pageSize']=10;
+
+            $.post('/api/city/cityPage',
+                searchObj,
+                function(data){
+                    refreshPage('tablePage',data.totalElements);
+            });
+        }
+        init()
+        initSelectedSourceCity()
+
+    </script>
+</section>
+</body>
+</html>

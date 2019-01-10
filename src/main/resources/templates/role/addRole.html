@@ -1,0 +1,140 @@
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/dialogLayout" style="overflow: hidden;">
+<head>
+    <title>添加角色</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div id="divContent" style="padding:10px;">
+        <form class="form form-horizontal">
+            <div class="row cl">
+                <label class="form-label col-xs-3">所属系统</label>
+                <div class="formControls col-xs-7">
+                    <input type="text" placeholder="所属系统" class="input-text radius size-M" name="appCode"
+                           id="appCode" readonly="readonly"/>
+                </div>
+                <div class="formControls col-xs-2">
+                    <a class="btn btn-primary size-S radius" href="javascript:;" onclick="choiceApp()">
+                        <i class="Hui-iconfont">&#xe61d;</i></a>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">系统名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="系统名称" class="input-text radius size-M" name="appName"
+                           id="appName" readonly="readonly"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">角色编码</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="角色编码，例如：系统编码缩写_角色名称" class="input-text radius size-M"
+                           name="roleCode"
+                           id="roleCode"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">角色名称</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="角色名称" class="input-text radius size-M" name="roleName"
+                           id="roleName"/>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">是否有效</label>
+                <div class="formControls col-xs-9">
+                    <select class="select" name="enable">
+                        <option value="ENABLED" selected="selected">有效</option>
+                        <option value="DISABLED">无效</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row cl">
+                <label class="form-label col-xs-3">描述</label>
+                <div class="formControls col-xs-9">
+                    <input type="text" placeholder="描述" class="input-text radius size-M" name="description"
+                           id="description"/>
+                </div>
+            </div>
+            <div class="row cl text-r">
+                <div class="formControls col-xs-12">
+                    <a class="btn btn-primary radius size-M" type="button" id="submit" onclick="submit()"><i
+                            class="Hui-iconfont">&#xe603;</i>提交</a>
+                    <a class="btn btn-primary radius size-M" type="button" id="cancel"
+                       onclick="javascript:clearSearchRegion('divContent');"><i
+                            class="Hui-iconfont">&#xe66b;</i>取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+    // 选择所属系统
+    function choiceApp(){
+        parent.layer.open({
+              type: 2,
+              title: '选择所属系统',
+              shade: 0.4,
+              area: ['800px', '570px'],
+              fixed: false, //不固定
+              content: '/choice/choiceApp',
+              end: function(){
+                var storage = window.localStorage;
+                if('undefined'!= typeof(storage.newAppCode)){
+                    $('#appCode').val(storage.newAppCode);
+                    $('#appName').val(storage.newAppName);
+                    storage.removeItem('newAppCode');
+                    storage.removeItem('newAppName');
+                }
+              }
+            });
+    }
+
+    // 提交
+    function submit(){
+        var obj = getSearchRegionJsonObject('divContent');
+        if(obj['roleCode'].length==0){
+            layer.msg('角色编码必填！', {icon: 0});
+            return
+        }
+        if(obj['roleName'].length==0){
+            layer.msg('角色名称必填！', {icon: 0});
+            return
+        }
+        if(obj['appCode'].length==0){
+            layer.msg('所属系统！', {icon: 0});
+            return
+        }
+
+        $.get('/api/role/checkRoleCode?roleCode='+obj['roleCode'],
+            function(data){
+                if(data.flag){
+                    $.ajax({
+                        type: "POST",
+                        url: "/api/role/saveRole",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify(obj),
+                        success: function (data) {
+                            if(data.flag){
+                                 layer.alert('提交成功！',{closeBtn: 0}, function(index){
+                                    layer.close(index);//关闭alert框
+                                    window.parent.init()//刷新父界面中的列表
+                                    //关闭详情框
+                                    var parentIndex = parent.layer.getFrameIndex(window.name);
+                                    parent.layer.close(parentIndex);
+                                });
+                            }else{
+                                layer.msg(data.msg, {icon: 5});
+                            }
+                        }
+                    });
+                }else{
+                 layer.msg(data.msg, {icon: 5});
+                }
+            });
+        }
+
+    </script>
+</section>
+</body>
+</html>

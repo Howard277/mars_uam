@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: mars_uam  	#要与git中的配置文件名称相同
+  cloud:
+    config:
+      uri: http://localhost:8000/	#测试环境配置中心地址
+      profile: dev #默认的profile为dev
+#      user: user
+#      password: # 密码需要从配置中心实施获取
+
+---
+spring.profiles: prod
+spring:
+  cloud:
+    config:
+      uri: http://localhost:8000/	#配置中心地址
+      profile: prod #默认的profile为dev
+
+---
+spring.profiles: test
+spring:
+  cloud:
+    config:
+      profile: test
+
+---
+spring.profiles: mit
+spring:
+  cloud:
+    config:
+      profile: mit
+
+---
+spring.profiles: sit
+spring:
+  cloud:
+    config:
+      profile: sit
+
+---
+spring.profiles: uat
+spring:
+  cloud:
+    config:
+      profile: uat
